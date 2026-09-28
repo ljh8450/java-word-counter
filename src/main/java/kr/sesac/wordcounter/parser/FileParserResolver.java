@@ -29,7 +29,7 @@ public class FileParserResolver {
         }
 
         if (fileName.endsWith("html")
-                || fileName.endsWith(".hml")) {
+                || fileName.endsWith(".htm")) {
             return htmlParser;
         }
 

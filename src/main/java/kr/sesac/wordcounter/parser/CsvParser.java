@@ -27,6 +27,7 @@ public class CsvParser implements FileTextParser {
                         CSVFormat.DEFAULT.builder()
                                 .setHeader()
                                 .setSkipHeaderRecord(true)
+                                .setTrim(true)
                                 .get()
                                 .parse(reader)
         ) {

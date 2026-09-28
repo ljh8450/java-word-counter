@@ -11,6 +11,7 @@ import kr.sesac.wordcounter.utils.ResultPrinter;
 import kr.sesac.wordcounter.tokenizer.WordTokenizer;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -79,7 +80,7 @@ public class Main {
                 successFiles++;
                 System.out.println("파일 읽기 성공.");
 
-            } catch (IOException e) {
+            } catch (IOException | UncheckedIOException e) {
                 failedFiles++;
                 System.out.println("파일 읽기에 실패: " + file + " / " + e.getMessage());
             }

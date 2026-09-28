@@ -43,6 +43,10 @@ public class TsvParser implements FileTextParser {
                     }
                 }
 
+                if (foundIndex < 0 ) {
+                    throw new IOException("필수 열이 없습니다." + targetColumn);
+                }
+
                 targetIndexes.add(foundIndex);
             }
 

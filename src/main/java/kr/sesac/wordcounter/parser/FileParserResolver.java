@@ -1,6 +1,7 @@
 package kr.sesac.wordcounter.parser;
 
 import java.nio.file.Path;
+import java.util.Locale;
 
 public class FileParserResolver {
 
@@ -14,7 +15,7 @@ public class FileParserResolver {
         String fileName =
                 file.getFileName()
                         .toString()
-                        .toLowerCase();
+                        .toLowerCase(Locale.ROOT);
 
         if (fileName.endsWith(".txt")) {
             return txtParser;
@@ -28,7 +29,7 @@ public class FileParserResolver {
             return tsvParser;
         }
 
-        if (fileName.endsWith("html")
+        if (fileName.endsWith(".html")
                 || fileName.endsWith(".htm")) {
             return htmlParser;
         }

@@ -35,9 +35,9 @@ public class Main {
         FileSelectionResult selection;
 
         while (true) {
-            Path input = inputUtils.readPath(scanner);
 
             try {
+                Path input = inputUtils.readPath(scanner);
                 selection = inputPathService.resolve(input);
                 break;
             } catch (IllegalArgumentException | IOException e) {

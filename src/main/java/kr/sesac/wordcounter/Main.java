@@ -73,6 +73,9 @@ public class Main {
                     int failedFiles = 0;
                     int skippedFiles = selection.getSkippedFiles();
 
+                    long parsedCharacterCount = 0;
+                    long generatedTokenCount = 0;
+
                     long startTime = System.nanoTime();
 
                     for (Path file : selection.getSupportedFiles()) {
@@ -87,12 +90,16 @@ public class Main {
                             List<String> texts = parser.parse((file));
 
                             for (String text : texts) {
-
+                                /**
                                 List<String> words = tokenizer.tokenize(text);
 
                                 for (String word : words) {
                                     fileCount.merge(word, 1L, Long::sum);
                                 }
+                                 */
+
+                                parsedCharacterCount += text.length();
+
                             }
 
                             for (Map.Entry<String, Long> entry : fileCount.entrySet()) {
@@ -114,6 +121,9 @@ public class Main {
                     long endTime = System.nanoTime();
 
                     long elapsedNanos = endTime - startTime;
+
+                    System.out.println("출력 문자 수: " + parsedCharacterCount);
+                    System.out.println("생성 토큰 수: " + generatedTokenCount);
 
                     AnalysisSummary summary = new AnalysisSummary(selection.getInputPath(), attemptFiles, successFiles, failedFiles, skippedFiles, totalWordCount, uniqueCount, elapsedNanos);
                     currentResult = new AnalysisResult(wordCount, summary);

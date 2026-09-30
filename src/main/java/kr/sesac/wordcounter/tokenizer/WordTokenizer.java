@@ -35,4 +35,47 @@ public class WordTokenizer {
     private boolean isNumberOnly(String word) {
         return NUMBER_PATTERN.matcher(word).matches();
     }
+
+    public List<String> tokenizeByCharacter(String text) {
+        List<String> words = new ArrayList<>();
+
+        int start = -1;
+        boolean hasNonDigit = false;
+
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+
+            if (isAllowed(ch)) {
+                if (start == -1) {
+                    start = i;
+                }
+
+                if (ch < '0' || ch >'9') {
+                    hasNonDigit = true;
+                }
+            }
+            else {
+                if (start != -1 && hasNonDigit) {
+                    String word = text.substring(start, i);
+                    words.add(normalize(word));
+                }
+
+                start = -1;
+                hasNonDigit = false;
+            }
+        }
+        if (start != -1 && hasNonDigit) {
+            words.add(normalize(text.substring(start)));
+        }
+        return words;
+    }
+
+    private boolean isAllowed(char ch) {
+        return (ch >= 'A' && ch <= 'Z')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= '0' && ch <= '9')
+                || (ch >= '가' && ch <= '힣')
+                || (ch >= 'ㄱ' && ch <= 'ㅎ')
+                || (ch >= 'ㅏ' && ch <= 'ㅣ');
+    }
 }

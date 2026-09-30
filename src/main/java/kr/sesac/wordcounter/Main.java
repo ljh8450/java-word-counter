@@ -73,9 +73,6 @@ public class Main {
                     int failedFiles = 0;
                     int skippedFiles = selection.getSkippedFiles();
 
-                    long parsedCharacterCount = 0;
-                    long generatedTokenCount = 0;
-
                     long startTime = System.nanoTime();
 
                     for (Path file : selection.getSupportedFiles()) {
@@ -90,20 +87,10 @@ public class Main {
                             List<String> texts = parser.parse((file));
 
                             for (String text : texts) {
-                                /**
-                                List<String> words = tokenizer.tokenize(text);
+//                                List<String> words = tokenizer.tokenize(text);
+                                List<String> words = tokenizer.tokenizeByCharacter(text);
 
                                 for (String word : words) {
-                                    fileCount.merge(word, 1L, Long::sum);
-                                }
-                                 */
-
-                                parsedCharacterCount += text.length();
-
-                                List<String> words = tokenizer.tokenize(text);
-                                generatedTokenCount += words.size();
-
-                                for (String word: words) {
                                     fileCount.merge(word, 1L, Long::sum);
                                 }
                             }
@@ -127,9 +114,6 @@ public class Main {
                     long endTime = System.nanoTime();
 
                     long elapsedNanos = endTime - startTime;
-
-                    System.out.println("출력 문자 수: " + parsedCharacterCount);
-                    System.out.println("생성 토큰 수: " + generatedTokenCount);
 
                     AnalysisSummary summary = new AnalysisSummary(selection.getInputPath(), attemptFiles, successFiles, failedFiles, skippedFiles, totalWordCount, uniqueCount, elapsedNanos);
                     currentResult = new AnalysisResult(wordCount, summary);
@@ -159,8 +143,8 @@ public class Main {
                         while (true) {
                             String inputString = inputUtils.readSearchWord(scanner);
 
-                            List<String> token = tokenizer.tokenize(inputString);
-
+//                            List<String> token = tokenizer.tokenize(inputString);
+                            List<String> token = tokenizer.tokenizeByCharacter(inputString);
                             if (token.size() != 1) {
                                 printer.printInvalidSearchWord();
                                 continue;

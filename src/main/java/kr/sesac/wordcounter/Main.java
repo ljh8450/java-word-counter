@@ -100,6 +100,8 @@ public class Main {
 
                                 parsedCharacterCount += text.length();
 
+                                List<String> words = tokenizer.tokenize(text);
+                                generatedTokenCount += words.size();
                             }
 
                             for (Map.Entry<String, Long> entry : fileCount.entrySet()) {

@@ -106,13 +106,14 @@ public class Main {
                             System.out.println("파일 읽기에 실패: " + file + " / " + e.getMessage());
                         }
                     }
-                    long endTime = System.nanoTime();
-
-                    long elapsedNanos = endTime - startTime;
 
                     long totalWordCount = wordCount.values().stream().mapToLong(Long::longValue).sum();
 
                     int uniqueCount = wordCount.size();
+
+                    long endTime = System.nanoTime();
+
+                    long elapsedNanos = endTime - startTime;
 
                     AnalysisSummary summary = new AnalysisSummary(selection.getInputPath(), attemptFiles, successFiles, failedFiles, skippedFiles, totalWordCount, uniqueCount, elapsedNanos);
                     currentResult = new AnalysisResult(wordCount, summary);

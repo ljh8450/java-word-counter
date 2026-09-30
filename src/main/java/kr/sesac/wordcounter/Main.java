@@ -102,6 +102,10 @@ public class Main {
 
                                 List<String> words = tokenizer.tokenize(text);
                                 generatedTokenCount += words.size();
+
+                                for (String word: words) {
+                                    fileCount.merge(word, 1L, Long::sum);
+                                }
                             }
 
                             for (Map.Entry<String, Long> entry : fileCount.entrySet()) {

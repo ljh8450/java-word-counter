@@ -1,5 +1,6 @@
 package kr.sesac.wordcounter;
 
+import kr.sesac.wordcounter.domain.AnalysisResult;
 import kr.sesac.wordcounter.domain.AnalysisSummary;
 import kr.sesac.wordcounter.domain.FileSelectionResult;
 import kr.sesac.wordcounter.input.InputPathService;
@@ -29,125 +30,171 @@ public class Main {
         FileParserResolver resolver = new FileParserResolver();
         InputPathService inputPathService = new InputPathService();
 
+        WordQueryService queryService = new WordQueryService();
+        ResultPrinter printer = new ResultPrinter();
+        ResultFileWriter writer = new ResultFileWriter();
+
         Scanner scanner = new Scanner(System.in);
         InputUtils inputUtils = new InputUtils();
 
-        FileSelectionResult selection;
+        AnalysisResult currentResult = null;
 
         while (true) {
+            System.out.println("1. 새 분석");
+            System.out.println("2. 상위 단어 조회");
+            System.out.println("3. 특정 단어 검색");
+            System.out.println("4. 결과 저장");
+            System.out.println("5. 최근 분석 요약");
+            System.out.println("0. 종료");
+            System.out.println("메뉴 선택");
 
-            try {
-                Path input = inputUtils.readPath(scanner);
-                selection = inputPathService.resolve(input);
-                break;
-            } catch (IllegalArgumentException | IOException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+            String menu = scanner.nextLine().trim();
 
-        Map<String, Long> wordCount = new HashMap<>();
+            switch (menu) {
+                case "1" -> {
 
-        int attemptFiles = 0;
-        int successFiles = 0;
-        int failedFiles = 0;
-        int skippedFiles = selection.getSkippedFiles();
+                    FileSelectionResult selection;
 
-        long startTime = System.nanoTime();
+                    while (true) {
 
-        for (Path file : selection.getSupportedFiles()) {
+                        try {
+                            Path input = inputUtils.readPath(scanner);
+                            selection = inputPathService.resolve(input);
+                            break;
+                        } catch (IllegalArgumentException | IOException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    }
 
-            attemptFiles++;
+                    Map<String, Long> wordCount = new HashMap<>();
 
-            Map<String, Long> fileCount = new HashMap<>();
+                    int attemptFiles = 0;
+                    int successFiles = 0;
+                    int failedFiles = 0;
+                    int skippedFiles = selection.getSkippedFiles();
 
-            try {
-                FileTextParser parser = resolver.resolve(file);
+                    long startTime = System.nanoTime();
 
-                List<String> texts = parser.parse((file));
+                    for (Path file : selection.getSupportedFiles()) {
 
-                for (String text : texts) {
+                        attemptFiles++;
 
-                    List<String> words = tokenizer.tokenize(text);
+                        Map<String, Long> fileCount = new HashMap<>();
 
-                    for (String word : words) {
-                        fileCount.merge(word, 1L, Long::sum);
+                        try {
+                            FileTextParser parser = resolver.resolve(file);
+
+                            List<String> texts = parser.parse((file));
+
+                            for (String text : texts) {
+
+                                List<String> words = tokenizer.tokenize(text);
+
+                                for (String word : words) {
+                                    fileCount.merge(word, 1L, Long::sum);
+                                }
+                            }
+
+                            for (Map.Entry<String, Long> entry: fileCount.entrySet()) {
+                                wordCount.merge(entry.getKey(), entry.getValue(), Long::sum);
+                            }
+                            successFiles++;
+                            System.out.println("파일 읽기 성공.");
+
+                        } catch (IOException | UncheckedIOException e) {
+                            failedFiles++;
+                            System.out.println("파일 읽기에 실패: " + file + " / " + e.getMessage());
+                        }
+                    }
+                    long endTime = System.nanoTime();
+
+                    long elapsedNanos = endTime - startTime;
+
+                    long totalWordCount = wordCount.values()
+                            .stream()
+                            .mapToLong(Long::longValue)
+                            .sum();
+
+                    int uniqueCount = wordCount.size();
+
+                    AnalysisSummary summary = new AnalysisSummary(
+                            selection.getInputPath(),
+                            attemptFiles,
+                            successFiles,
+                            failedFiles,
+                            skippedFiles,
+                            totalWordCount,
+                            uniqueCount,
+                            elapsedNanos
+                    );
+                    currentResult = new AnalysisResult(wordCount, summary);
+                    printer.printSummary(currentResult.getSummary());
+                }
+
+                case "2" -> {
+
+                    int n = inputUtils.readTopN(scanner);
+
+                    List<Map.Entry<String, Long>> topWords = queryService.getTopWords(currentResult.getWordCount(), n);
+
+                    printer.printTopWords(topWords);
+
+                }
+
+                case "3" -> {
+
+                    while (true) {
+                        String inputString = inputUtils.readSearchWord(scanner);
+
+                        List<String> token = tokenizer.tokenize(inputString);
+
+                        if (token.size() != 1) {
+                            printer.printInvalidSearchWord();
+                            continue;
+                        }
+
+                        String word = token.get(0);
+
+                        long count = queryService.findWordCount(currentResult.getWordCount(), word);
+
+                        printer.printWordCount(word, count);
+                        break;
                     }
                 }
 
-                for (Map.Entry<String, Long> entry: fileCount.entrySet()) {
-                    wordCount.merge(entry.getKey(), entry.getValue(), Long::sum);
+                case  "4" -> {
+
+                    Path output = Path.of("out/counts.tsv");
+
+                    List<Map.Entry<String, Long>> allWords = queryService.getSortedWords(currentResult.getWordCount());
+
+                    try {
+                        writer.save(output, allWords);
+
+                        printer.printSaveSuccess(output);
+                    } catch (IOException e) {
+                        printer.printSaveFailure(e.getMessage());
+                    }
                 }
-                successFiles++;
-                System.out.println("파일 읽기 성공.");
 
-            } catch (IOException | UncheckedIOException e) {
-                failedFiles++;
-                System.out.println("파일 읽기에 실패: " + file + " / " + e.getMessage());
+                case "5" -> {
+                    if (currentResult == null) {
+                        System.out.println("분석을 먼저 완료해주세요.");
+                    }
+                    else  {
+                        printer.printSummary(currentResult.getSummary());
+                    }
+                }
+
+                case "0" -> {
+                    System.out.println("종료합니다.");
+                    return;
+                }
+
+                default -> {
+                    System.out.println("0~5 중에서 선택해주세요.");
+                }
             }
-        }
-        long endTime = System.nanoTime();
-
-        long elapsedNanos = endTime - startTime;
-
-        long totalWordCount = wordCount.values()
-                .stream()
-                .mapToLong(Long::longValue)
-                .sum();
-
-        int uniqueCount = wordCount.size();
-
-        AnalysisSummary summary = new AnalysisSummary(
-                selection.getInputPath(),
-                attemptFiles,
-                successFiles,
-                failedFiles,
-                skippedFiles,
-                totalWordCount,
-                uniqueCount,
-                elapsedNanos
-        );
-
-        WordQueryService queryService = new WordQueryService();
-        ResultPrinter printer = new ResultPrinter();
-
-        printer.printSummary(summary);
-
-        int n = inputUtils.readTopN(scanner);
-
-        List<Map.Entry<String, Long>> topWords = queryService.getTopWords(wordCount, n);
-
-        printer.printTopWords(topWords);
-
-        while (true) {
-            String inputString = inputUtils.readSearchWord(scanner);
-
-            List<String> token = tokenizer.tokenize(inputString);
-
-            if (token.size() != 1) {
-                printer.printInvalidSearchWord();
-                continue;
-            }
-
-            String word = token.get(0);
-
-            long count = queryService.findWordCount(wordCount, word);
-
-            printer.printWordCount(word, count);
-            break;
-        }
-
-        Path output = Path.of("out/counts.tsv");
-
-        List<Map.Entry<String, Long>> allWords = queryService.getSortedWords(wordCount);
-
-        ResultFileWriter fileWriter = new ResultFileWriter();
-
-        try {
-            fileWriter.save(output, allWords);
-
-            printer.printSaveSuccess(output);
-        } catch (IOException e) {
-            printer.printSaveFailure(e.getMessage());
         }
     }
 }

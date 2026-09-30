@@ -46,7 +46,7 @@ public class Main {
             System.out.println("4. 결과 저장");
             System.out.println("5. 최근 분석 요약");
             System.out.println("0. 종료");
-            System.out.println("메뉴 선택");
+            System.out.print("메뉴 선택: ");
 
             String menu = scanner.nextLine().trim();
 
@@ -95,7 +95,7 @@ public class Main {
                                 }
                             }
 
-                            for (Map.Entry<String, Long> entry: fileCount.entrySet()) {
+                            for (Map.Entry<String, Long> entry : fileCount.entrySet()) {
                                 wordCount.merge(entry.getKey(), entry.getValue(), Long::sum);
                             }
                             successFiles++;
@@ -110,78 +110,79 @@ public class Main {
 
                     long elapsedNanos = endTime - startTime;
 
-                    long totalWordCount = wordCount.values()
-                            .stream()
-                            .mapToLong(Long::longValue)
-                            .sum();
+                    long totalWordCount = wordCount.values().stream().mapToLong(Long::longValue).sum();
 
                     int uniqueCount = wordCount.size();
 
-                    AnalysisSummary summary = new AnalysisSummary(
-                            selection.getInputPath(),
-                            attemptFiles,
-                            successFiles,
-                            failedFiles,
-                            skippedFiles,
-                            totalWordCount,
-                            uniqueCount,
-                            elapsedNanos
-                    );
+                    AnalysisSummary summary = new AnalysisSummary(selection.getInputPath(), attemptFiles, successFiles, failedFiles, skippedFiles, totalWordCount, uniqueCount, elapsedNanos);
                     currentResult = new AnalysisResult(wordCount, summary);
                     printer.printSummary(currentResult.getSummary());
                 }
 
                 case "2" -> {
+                    if (currentResult == null) {
+                        System.out.println("분석을 먼저 완료해주세요.");
+                    } else if (!currentResult.canQuery()) {
+                        System.out.println("성공한 파일이 없어 조회할 수 없습니다.");
+                    } else {
+                        int n = inputUtils.readTopN(scanner);
 
-                    int n = inputUtils.readTopN(scanner);
+                        List<Map.Entry<String, Long>> topWords = queryService.getTopWords(currentResult.getWordCount(), n);
 
-                    List<Map.Entry<String, Long>> topWords = queryService.getTopWords(currentResult.getWordCount(), n);
-
-                    printer.printTopWords(topWords);
-
-                }
-
-                case "3" -> {
-
-                    while (true) {
-                        String inputString = inputUtils.readSearchWord(scanner);
-
-                        List<String> token = tokenizer.tokenize(inputString);
-
-                        if (token.size() != 1) {
-                            printer.printInvalidSearchWord();
-                            continue;
-                        }
-
-                        String word = token.get(0);
-
-                        long count = queryService.findWordCount(currentResult.getWordCount(), word);
-
-                        printer.printWordCount(word, count);
-                        break;
+                        printer.printTopWords(topWords);
                     }
                 }
 
-                case  "4" -> {
+                case "3" -> {
+                    if (currentResult == null) {
+                        System.out.println("분석을 먼저 완료해주세요.");
+                    } else if (!currentResult.canQuery()) {
+                        System.out.println("성공한 파일이 없어 조회할 수 없습니다.");
+                    } else {
+                        while (true) {
+                            String inputString = inputUtils.readSearchWord(scanner);
 
-                    Path output = Path.of("out/counts.tsv");
+                            List<String> token = tokenizer.tokenize(inputString);
 
-                    List<Map.Entry<String, Long>> allWords = queryService.getSortedWords(currentResult.getWordCount());
+                            if (token.size() != 1) {
+                                printer.printInvalidSearchWord();
+                                continue;
+                            }
 
-                    try {
-                        writer.save(output, allWords);
+                            String word = token.get(0);
 
-                        printer.printSaveSuccess(output);
-                    } catch (IOException e) {
-                        printer.printSaveFailure(e.getMessage());
+                            long count = queryService.findWordCount(currentResult.getWordCount(), word);
+
+                            printer.printWordCount(word, count);
+                            break;
+                        }
+                    }
+                }
+
+                case "4" -> {
+                    if (currentResult == null) {
+                        System.out.println("분석을 먼저 완료해주세요.");
+                    } else if (!currentResult.canSave()) {
+                        System.out.println("성공한 파일이 없어 저장할 수 없습니다.");
+                    } else {
+                        Path output = Path.of("out/counts.tsv");
+
+                        List<Map.Entry<String, Long>> allWords = queryService.getSortedWords(currentResult.getWordCount());
+
+                        try {
+                            writer.save(output, allWords);
+
+                            printer.printSaveSuccess(output);
+                        } catch (IOException e) {
+                            printer.printSaveFailure(e.getMessage());
+                        }
                     }
                 }
 
                 case "5" -> {
                     if (currentResult == null) {
                         System.out.println("분석을 먼저 완료해주세요.");
-                    }
-                    else  {
+                    } else {
                         printer.printSummary(currentResult.getSummary());
                     }
                 }

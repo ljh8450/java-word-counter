@@ -51,7 +51,7 @@ public class AnalysisService {
 
         int uniqueWordCount = totalCounts.size();
 
-        long elepsedNanos = System.nanoTime() - startTime;
+        long elapsedNanos = System.nanoTime() - startTime;
 
         // AnalysisSummary 생성 후 AnalysisResult 반환
         AnalysisSummary summary = new AnalysisSummary(
@@ -62,7 +62,7 @@ public class AnalysisService {
                 selection.getSkippedFiles(),
                 totalWordCount,
                 uniqueWordCount,
-                elepsedNanos
+                elapsedNanos
         );
 
         return new AnalysisResult(totalCounts, summary);

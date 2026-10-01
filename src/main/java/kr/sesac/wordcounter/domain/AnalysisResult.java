@@ -8,7 +8,7 @@ public class AnalysisResult {
     private final AnalysisSummary summary;
 
     public AnalysisResult(Map<String, Long> wordCount, AnalysisSummary summary){
-        this.wordCount = wordCount;
+        this.wordCount = Map.copyOf(wordCount);
         this.summary = summary;
     }
 

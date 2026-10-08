@@ -1,9 +1,9 @@
 package kr.sesac.wordcounter.parser;
 
+import kr.sesac.wordcounter.utils.AnalysisCancellation;
+
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ public class TsvParser implements FileTextParser {
     public List<String> parse(Path file) throws IOException {
         List<String> texts = new ArrayList<>();
 
-        try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = AnalysisCancellation.openReader(file)) {
 
             String headLine = reader.readLine();
 
@@ -53,6 +53,7 @@ public class TsvParser implements FileTextParser {
             String line;
 
             while ((line = reader.readLine()) != null) {
+                AnalysisCancellation.check();
 
                 String[] cells = line.split("\t", -1);
 
@@ -68,10 +69,6 @@ public class TsvParser implements FileTextParser {
                         texts.add(value);
                     }
                 }
-            }
-
-            for (String header: headers) {
-                System.out.println(header);
             }
         }
 

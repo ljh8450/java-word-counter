@@ -1,6 +1,7 @@
 package kr.sesac.wordcounter.utils;
 
 import kr.sesac.wordcounter.domain.AnalysisSummary;
+import kr.sesac.wordcounter.domain.FileAnalysisFailure;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -34,6 +35,13 @@ public class ResultPrinter {
     }
 
     public void printSummary(AnalysisSummary summary) {
+        System.out.println("실행 상태: " + summary.getStatus());
+        System.out.println("대상 파일: " + summary.getTargetFiles());
+        System.out.println("완료 파일: " + summary.getCompletedFiles());
+        System.out.println("미완료 파일: " + summary.getUnfinishedFiles());
+        if (summary.getExecutionFailure() != null) {
+            System.out.println("실행 안내: " + summary.getExecutionFailure());
+        }
 
         double elapseMillis = summary.getElapsedNanos() / 1_000_000.0;
 
@@ -54,5 +62,11 @@ public class ResultPrinter {
 
     public void printSaveFailure(String message){
         System.out.println("저장 실패: " + message);
+    }
+
+    public void printFailures(List<FileAnalysisFailure> failures) {
+        for (FileAnalysisFailure failure : failures) {
+            System.out.println("파일 읽기에 실패: " + failure.path() + " / " + failure.cause().getMessage());
+        }
     }
 }

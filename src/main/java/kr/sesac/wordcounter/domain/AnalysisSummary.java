@@ -12,6 +12,10 @@ public class AnalysisSummary {
     private final long totalWordCount;
     private final int uniqueWordCount;
     private final long elapsedNanos;
+    private final AnalysisStatus status;
+    private final int targetFiles;
+    private final String executionFailure;
+
     public AnalysisSummary(
             Path inputPath,
             int attemptedFiles,
@@ -20,7 +24,10 @@ public class AnalysisSummary {
             int skippedFiles,
             long totalWordCount,
             int uniqueWordCount,
-            long elapsedNanos
+            long elapsedNanos,
+            AnalysisStatus status,
+            int targetFiles,
+            String executionFailure
     ) {
         this.inputPath = inputPath;
         this.attemptedFiles = attemptedFiles;
@@ -30,6 +37,9 @@ public class AnalysisSummary {
         this.totalWordCount = totalWordCount;
         this.uniqueWordCount = uniqueWordCount;
         this.elapsedNanos = elapsedNanos;
+        this.status = status;
+        this.targetFiles = targetFiles;
+        this.executionFailure = executionFailure;
     }
 
     public Path getInputPath() {
@@ -62,5 +72,25 @@ public class AnalysisSummary {
 
     public long getElapsedNanos() {
         return elapsedNanos;
+    }
+
+    public AnalysisStatus getStatus() {
+        return status;
+    }
+
+    public int getTargetFiles() {
+        return targetFiles;
+    }
+
+    public int getCompletedFiles() {
+        return successFiles + failedFiles;
+    }
+
+    public int getUnfinishedFiles() {
+        return targetFiles - getCompletedFiles();
+    }
+
+    public String getExecutionFailure() {
+        return executionFailure;
     }
 }

@@ -1,5 +1,7 @@
 package kr.sesac.wordcounter.tokenizer;
 
+import kr.sesac.wordcounter.utils.AnalysisCancellation;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -43,6 +45,9 @@ public class WordTokenizer {
         boolean hasNonDigit = false;
 
         for (int i = 0; i < text.length(); i++) {
+            if ((i & 4095) == 0) {
+                AnalysisCancellation.check();
+            }
             char ch = text.charAt(i);
 
             if (isAllowed(ch)) {

@@ -1,15 +1,18 @@
 package kr.sesac.wordcounter.domain;
 
+import java.util.List;
 import java.util.Map;
 
 public class AnalysisResult {
 
     private final Map<String, Long> wordCount;
     private final AnalysisSummary summary;
+    private final List<FileAnalysisFailure> failures;
 
-    public AnalysisResult(Map<String, Long> wordCount, AnalysisSummary summary){
+    public AnalysisResult(Map<String, Long> wordCount, AnalysisSummary summary, List<FileAnalysisFailure> failures) {
         this.wordCount = Map.copyOf(wordCount);
         this.summary = summary;
+        this.failures = List.copyOf(failures);
     }
 
     public Map<String, Long> getWordCount() {
@@ -21,10 +24,14 @@ public class AnalysisResult {
     }
 
     public boolean canQuery() {
-        return summary.getSuccessFiles() > 0;
+        return summary.getStatus() == AnalysisStatus.COMPLETED && summary.getSuccessFiles() > 0;
     }
 
     public boolean canSave() {
-        return summary.getSuccessFiles() > 0;
+        return canQuery();
+    }
+
+    public List<FileAnalysisFailure> getFailures() {
+        return failures;
     }
 }
